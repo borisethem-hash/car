@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "利用者管理" };
 export default async function UsersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const me = await requireAdmin();
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const editId = param(sp.edit);
   const editing = db.users.find((u) => u.id === editId);

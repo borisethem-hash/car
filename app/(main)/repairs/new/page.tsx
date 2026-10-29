@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "修理・整備の登録" };
 export default async function NewRepairPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const vehicleId = param(sp.vehicleId);
   const returnTo = safePath(param(sp.returnTo), "/repairs");
 

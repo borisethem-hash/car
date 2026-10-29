@@ -34,7 +34,7 @@ export async function login(_prev: FormState, fd: FormData): Promise<FormState> 
   const password = text(fd, "password");
   if (!email || !password) return { error: "メールアドレスとパスワードを入力してください。" };
 
-  const user = readDb().users.find((u) => u.email.toLowerCase() === email);
+  const user = (await readDb()).users.find((u) => u.email.toLowerCase() === email);
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { error: "メールアドレスまたはパスワードが正しくありません。" };
   }
@@ -77,7 +77,7 @@ export async function saveVehicle(_prev: FormState, fd: FormData): Promise<FormS
   if (mileage === null) return { error: "走行距離は0以上の数字で入力してください。" };
   if (!VEHICLE_STATUSES.includes(status)) return { error: "状態を選択してください。" };
 
-  const db = readDb();
+  const db = await readDb();
   const normalized = plateNumber.replace(/\s/g, "");
   if (db.vehicles.some((v) => v.id !== id && v.plateNumber.replace(/\s/g, "") === normalized)) {
     return { error: "同じ登録番号の車両がすでに登録されています。" };
@@ -85,7 +85,7 @@ export async function saveVehicle(_prev: FormState, fd: FormData): Promise<FormS
 
   const now = new Date().toISOString();
   let savedId = id;
-  const result = updateDb((d) => {
+  const result = await updateDb((d) => {
     if (id) {
       const v = d.vehicles.find((x) => x.id === id);
       if (!v) return "車両が見つかりません。削除された可能性があります。";
@@ -105,7 +105,7 @@ export async function saveVehicle(_prev: FormState, fd: FormData): Promise<FormS
 export async function deleteVehicle(id: string): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") return { ok: false, error: NOT_ALLOWED };
-  updateDb((d) => {
+  await updateDb((d) => {
     d.vehicles = d.vehicles.filter((v) => v.id !== id);
     d.repairs = d.repairs.filter((r) => r.vehicleId !== id);
   });
@@ -138,13 +138,13 @@ export async function saveRepair(_prev: FormState, fd: FormData): Promise<FormSt
   if (cost === null) return { error: "費用は0以上の数字で入力してください（例：35000）。" };
   if (mileage === null) return { error: "走行距離は0以上の数字で入力してください。" };
 
-  const db = readDb();
+  const db = await readDb();
   const vehicle = db.vehicles.find((v) => v.id === vehicleId);
   if (!vehicle) return { error: "選択された車両が見つかりません。" };
   if (!canAccessVehicle(user, vehicle)) return { error: "他の事業部の車両には登録できません。" };
   if (id && user.role !== "admin") return { error: "登録済みの履歴の修正は管理者のみ行えます。" };
 
-  const result = updateDb((d) => {
+  const result = await updateDb((d) => {
     if (id) {
       const r = d.repairs.find((x) => x.id === id);
       if (!r) return "履歴が見つかりません。削除された可能性があります。";
@@ -176,7 +176,7 @@ export async function saveRepair(_prev: FormState, fd: FormData): Promise<FormSt
 export async function deleteRepair(id: string): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") return { ok: false, error: NOT_ALLOWED };
-  updateDb((d) => {
+  await updateDb((d) => {
     d.repairs = d.repairs.filter((r) => r.id !== id);
   });
   revalidatePath("/", "layout");
@@ -194,9 +194,9 @@ export async function saveVendor(_prev: FormState, fd: FormData): Promise<FormSt
   const address = text(fd, "address");
   const note = text(fd, "note");
   if (!name) return { error: "業者名を入力してください。" };
-  const db = readDb();
+  const db = await readDb();
   if (db.vendors.some((v) => v.id !== id && v.name === name)) return { error: "同じ名前の業者がすでに登録されています。" };
-  updateDb((d) => {
+  await updateDb((d) => {
     if (id) {
       const v = d.vendors.find((x) => x.id === id);
       if (v) Object.assign(v, { name, phone, address, note });
@@ -211,9 +211,9 @@ export async function saveVendor(_prev: FormState, fd: FormData): Promise<FormSt
 export async function deleteVendor(id: string): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") return { ok: false, error: NOT_ALLOWED };
-  const used = readDb().repairs.filter((r) => r.vendorId === id).length;
+  const used = (await readDb()).repairs.filter((r) => r.vendorId === id).length;
   if (used > 0) return { ok: false, error: `この業者は修理履歴で${used}件使われているため削除できません。` };
-  updateDb((d) => {
+  await updateDb((d) => {
     d.vendors = d.vendors.filter((v) => v.id !== id);
   });
   revalidatePath("/", "layout");
@@ -231,10 +231,10 @@ export async function saveSimpleMaster(_prev: FormState, fd: FormData): Promise<
   const id = text(fd, "id");
   const name = text(fd, "name");
   if (!name) return { error: `${masterLabels[kind]}の名前を入力してください。` };
-  const db = readDb();
+  const db = await readDb();
   const existing: { id: string; name: string }[] = db[kind];
   if (existing.some((x) => x.id !== id && x.name === name)) return { error: `同じ名前の${masterLabels[kind]}がすでにあります。` };
-  updateDb((d) => {
+  await updateDb((d) => {
     const list: { id: string; name: string }[] = d[kind];
     if (id) {
       const item = list.find((x) => x.id === id);
@@ -250,13 +250,13 @@ export async function saveSimpleMaster(_prev: FormState, fd: FormData): Promise<
 export async function deleteSimpleMaster(kind: SimpleMaster, id: string): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") return { ok: false, error: NOT_ALLOWED };
-  const db = readDb();
+  const db = await readDb();
   let used = 0;
   if (kind === "parts") used = db.repairs.filter((r) => r.partId === id).length;
   if (kind === "divisions") used = db.vehicles.filter((v) => v.divisionId === id).length + db.users.filter((u) => u.divisionId === id).length;
   if (kind === "categories") used = db.vehicles.filter((v) => v.categoryId === id).length;
   if (used > 0) return { ok: false, error: `この${masterLabels[kind]}は${used}件のデータで使われているため削除できません。` };
-  updateDb((d) => {
+  await updateDb((d) => {
     if (kind === "parts") d.parts = d.parts.filter((x) => x.id !== id);
     if (kind === "divisions") d.divisions = d.divisions.filter((x) => x.id !== id);
     if (kind === "categories") d.categories = d.categories.filter((x) => x.id !== id);
@@ -286,10 +286,10 @@ export async function saveUser(_prev: FormState, fd: FormData): Promise<FormStat
   if (id && password && password.length < 8) return { error: "パスワードは8文字以上で入力してください。" };
   if (id === me.id && (role !== "admin" || !active)) return { error: "自分自身の管理者権限の解除・利用停止はできません。" };
 
-  const db = readDb();
+  const db = await readDb();
   if (db.users.some((u) => u.id !== id && u.email.toLowerCase() === email)) return { error: "このメールアドレスはすでに使われています。" };
 
-  updateDb((d) => {
+  await updateDb((d) => {
     const division = role === "admin" ? null : divisionId;
     if (id) {
       const u = d.users.find((x) => x.id === id);
@@ -309,7 +309,7 @@ export async function deleteUser(id: string): Promise<ActionResult> {
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") return { ok: false, error: NOT_ALLOWED };
   if (id === me.id) return { ok: false, error: "自分自身は削除できません。" };
-  updateDb((d) => {
+  await updateDb((d) => {
     d.users = d.users.filter((u) => u.id !== id);
   });
   revalidatePath("/", "layout");
@@ -322,11 +322,11 @@ export async function changeOwnPassword(_prev: FormState, fd: FormData): Promise
   const current = text(fd, "current");
   const next = text(fd, "next");
   const confirm = text(fd, "confirm");
-  const user = readDb().users.find((u) => u.id === me.id);
+  const user = (await readDb()).users.find((u) => u.id === me.id);
   if (!user || !verifyPassword(current, user.passwordHash)) return { error: "現在のパスワードが正しくありません。" };
   if (next.length < 8) return { error: "新しいパスワードは8文字以上で入力してください。" };
   if (next !== confirm) return { error: "新しいパスワード（確認）が一致しません。" };
-  updateDb((d) => {
+  await updateDb((d) => {
     const u = d.users.find((x) => x.id === me.id);
     if (u) u.passwordHash = hashPassword(next);
   });
@@ -338,7 +338,7 @@ export async function changeOwnPassword(_prev: FormState, fd: FormData): Promise
 export async function resetDemoData(): Promise<ActionResult> {
   const me = await getCurrentUser();
   if (!me || me.role !== "admin") return { ok: false, error: NOT_ALLOWED };
-  resetDb();
+  await resetDb();
   revalidatePath("/", "layout");
   return { ok: true };
 }

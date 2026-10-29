@@ -16,7 +16,7 @@ type SP = Promise<Record<string, string | string[] | undefined>>;
 export default async function VehiclesPage({ searchParams }: { searchParams: SP }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const isAdmin = user.role === "admin";
 

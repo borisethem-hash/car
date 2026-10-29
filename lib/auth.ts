@@ -42,17 +42,19 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const expected = Buffer.from(sign(payload));
   const actual = Buffer.from(signature);
   if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null;
+  let data: { uid: string; exp: number };
   try {
-    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { uid: string; exp: number };
-    if (data.exp < Date.now()) return null;
-    const user = readDb().users.find((u) => u.id === data.uid && u.active);
-    if (!user) return null;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...rest } = user;
-    return rest;
+    data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
   } catch {
     return null;
   }
+  if (data.exp < Date.now()) return null;
+  // データの読み込みエラー（保存先の設定ミスなど）は隠さずにエラーとして記録します
+  const user = (await readDb()).users.find((u) => u.id === data.uid && u.active);
+  if (!user) return null;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { passwordHash, ...rest } = user;
+  return rest;
 }
 
 /** ログイン必須のページで使用。未ログインならログイン画面へ */

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "車両の登録" };
 
 export default async function NewVehiclePage() {
   await requireAdmin();
-  const db = readDb();
+  const db = await readDb();
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="車両の登録" description="車検証を見ながら入力してください。「必須」の項目は必ず入力が必要です。" />

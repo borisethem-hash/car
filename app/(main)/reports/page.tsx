@@ -114,7 +114,7 @@ function Legend({ curLabel, prevLabel }: { curLabel: string; prevLabel: string }
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const isAdmin = user.role === "admin";
   const today = todayStr();

@@ -8,7 +8,7 @@ import { addYears, changeRate, daysBetween, fiscalYearOf, formatDate, todayStr, 
 
 export default async function HomePage() {
   const user = await requireUser();
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const today = todayStr();
 

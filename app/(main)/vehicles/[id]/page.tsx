@@ -16,7 +16,7 @@ export default async function VehicleDetailPage({ params, searchParams }: { para
   const user = await requireUser();
   const { id } = await params;
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const vehicle = db.vehicles.find((v) => v.id === id);
   if (!vehicle || !canAccessVehicle(user, vehicle)) notFound();

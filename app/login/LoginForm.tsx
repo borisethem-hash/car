@@ -10,7 +10,7 @@ const testAccounts = [
   { label: "一般ユーザー", desc: "東京事業部の車両のみ閲覧・修理登録", email: "user@example.com", password: "user1234" },
 ];
 
-export function LoginForm() {
+export function LoginForm({ isDemo }: { isDemo: boolean }) {
   const [state, formAction, pending] = useActionState(login, {});
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,6 +75,7 @@ export function LoginForm() {
             </button>
           ))}
         </div>
+        {isDemo && <p className="mt-4 text-center text-xs leading-relaxed text-[var(--muted)]">デモ版のため、登録・変更した内容はしばらくすると初期状態に戻ります。</p>}
       </div>
     </div>
   );

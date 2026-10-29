@@ -12,7 +12,7 @@ export default async function EditRepairPage({ params, searchParams }: { params:
   await requireAdmin();
   const { id } = await params;
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const repair = db.repairs.find((r) => r.id === id);
   if (!repair) notFound();
   const returnTo = safePath(param(sp.returnTo), "/repairs");

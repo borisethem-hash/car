@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "車両の編集" };
 export default async function EditVehiclePage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin();
   const { id } = await params;
-  const db = readDb();
+  const db = await readDb();
   const vehicle = db.vehicles.find((v) => v.id === id);
   if (!vehicle) notFound();
   return (

@@ -18,7 +18,7 @@ const PAGE_SIZE = 50;
 export default async function RepairsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const user = await requireUser();
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const isAdmin = user.role === "admin";
 

@@ -22,7 +22,7 @@ type SimpleKind = "parts" | "divisions" | "categories";
 export default async function MastersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin();
   const sp = await searchParams;
-  const db = readDb();
+  const db = await readDb();
   const tab = tabs.find((t) => t.key === param(sp.tab))?.key ?? "vendors";
   const editId = param(sp.edit);
 

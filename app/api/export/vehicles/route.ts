@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return new Response("ログインが必要です", { status: 401 });
   const sp = new URL(request.url).searchParams;
-  const db = readDb();
+  const db = await readDb();
   const L = lookup(db);
   const list = filterVehicles(db, user, {
     q: sp.get("q") ?? "",
