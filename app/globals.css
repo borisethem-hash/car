@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --sidebar: #f9f9f9;
+  --text: #0d0d0d;
+  --muted: #5d5d5d;
+  --border: #e5e5e5;
+  --accent: #0d0d0d;
+  --series-current: #2a78d6;
+  --series-previous: #b9b7b0;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 数字の桁がそろって見やすくなるように */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="date"],
+input[type="month"] {
+  min-height: 2.5rem;
+}
